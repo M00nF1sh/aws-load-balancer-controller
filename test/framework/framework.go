@@ -23,6 +23,7 @@ type Framework struct {
 	Options   Options
 	RestCfg   *rest.Config
 	K8sClient client.Client
+	K8sScheme *runtime.Scheme
 	Cloud     aws.Cloud
 
 	CTRLInstallationManager controller.InstallationManager
@@ -45,12 +46,12 @@ func InitFramework() (*Framework, error) {
 	}
 	restCfg := ctrl.GetConfigOrDie()
 
-	k8sSchema := runtime.NewScheme()
-	clientgoscheme.AddToScheme(k8sSchema)
-	elbv2api.AddToScheme(k8sSchema)
+	k8sScheme := runtime.NewScheme()
+	clientgoscheme.AddToScheme(k8sScheme)
+	elbv2api.AddToScheme(k8sScheme)
 
 	stopChan := ctrl.SetupSignalHandler()
-	cache, err := cache.New(restCfg, cache.Options{Scheme: k8sSchema})
+	cache, err := cache.New(restCfg, cache.Options{Scheme: k8sScheme})
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func InitFramework() (*Framework, error) {
 		cache.Start(stopChan)
 	}()
 	cache.WaitForCacheSync(stopChan)
-	realClient, err := client.New(restCfg, client.Options{Scheme: k8sSchema})
+	realClient, err := client.New(restCfg, client.Options{Scheme: k8sScheme})
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +88,7 @@ func InitFramework() (*Framework, error) {
 		Options:   globalOptions,
 		RestCfg:   restCfg,
 		K8sClient: k8sClient,
+		K8sScheme: k8sScheme,
 		Cloud:     cloud,
 
 		CTRLInstallationManager: buildControllerInstallationManager(globalOptions, logger),

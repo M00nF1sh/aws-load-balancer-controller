@@ -1,4 +1,4 @@
-package ingress
+package ingress_v1
 
 import (
 	"context"
@@ -238,8 +238,8 @@ func (s *multiPathBackendStack) buildIngressResource(ns *corev1.Namespace, ingID
 			Namespace: ns.Name,
 			Name:      ingID,
 			Annotations: map[string]string{
-				"kubernetes.io/ingress.class":      "alb",
-				"alb.ingress.kubernetes.io/scheme": "internet-facing",
+				"kubernetes.io/ingress_v1.class":      "alb",
+				"alb.ingress_v1.kubernetes.io/scheme": "internet-facing",
 			},
 		},
 		Spec: networking.IngressSpec{
@@ -263,9 +263,9 @@ func (s *multiPathBackendStack) buildIngressResource(ns *corev1.Namespace, ingID
 		})
 	}
 	if ingCFG.GroupName != "" {
-		ing.Annotations["alb.ingress.kubernetes.io/group.name"] = ingCFG.GroupName
+		ing.Annotations["alb.ingress_v1.kubernetes.io/group.name"] = ingCFG.GroupName
 		if ingCFG.GroupOrder != 0 {
-			ing.Annotations["alb.ingress.kubernetes.io/group.order"] = fmt.Sprintf("%v", ingCFG.GroupOrder)
+			ing.Annotations["alb.ingress_v1.kubernetes.io/group.order"] = fmt.Sprintf("%v", ingCFG.GroupOrder)
 		}
 	}
 	return ing
@@ -332,7 +332,7 @@ func (s *multiPathBackendStack) buildBackendResource(ns *corev1.Namespace, backe
 			Namespace: ns.Name,
 			Name:      backendID,
 			Annotations: map[string]string{
-				"alb.ingress.kubernetes.io/target-type": string(backendCFG.TargetType),
+				"alb.ingress_v1.kubernetes.io/target-type": string(backendCFG.TargetType),
 			},
 		},
 		Spec: corev1.ServiceSpec{

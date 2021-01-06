@@ -21,7 +21,9 @@ func NewDefaultInstallationManager(helmReleaseManager helm.ReleaseManager, clust
 		region:             region,
 		vpcID:              vpcID,
 
-		logger: logger,
+		namespace:        "kube-system",
+		controllerSAName: "aws-load-balancer-controller",
+		logger:           logger,
 	}
 }
 
@@ -34,12 +36,17 @@ type defaultInstallationManager struct {
 	region             string
 	vpcID              string
 
+	namespace        string
+	controllerSAName string
+
 	logger logr.Logger
 }
 
 func (m *defaultInstallationManager) ResetController() error {
 	vals := m.computeDefaultHelmVals()
-	_, err := m.helmReleaseManager.InstallOrUpgradeRelease(EKSHelmChartsRepo, AWSLoadBalancerControllerHelmChart, "kube-system", AWSLoadBalancerControllerHelmRelease, vals)
+	_, err := m.helmReleaseManager.InstallOrUpgradeRelease(EKSHelmChartsRepo, AWSLoadBalancerControllerHelmChart,
+		m.namespace, AWSLoadBalancerControllerHelmRelease, vals,
+		helm.WithTimeout(AWSLoadBalancerControllerInstallationTimeout))
 	return err
 }
 
@@ -53,7 +60,9 @@ func (m *defaultInstallationManager) UpgradeController(controllerImage string) e
 		"repository": imageRepo,
 		"tag":        imageTag,
 	}
-	_, err = m.helmReleaseManager.InstallOrUpgradeRelease(EKSHelmChartsRepo, AWSLoadBalancerControllerHelmChart, "kube-system", AWSLoadBalancerControllerHelmRelease, vals)
+	_, err = m.helmReleaseManager.InstallOrUpgradeRelease(EKSHelmChartsRepo, AWSLoadBalancerControllerHelmChart,
+		m.namespace, AWSLoadBalancerControllerHelmRelease, vals,
+		helm.WithTimeout(AWSLoadBalancerControllerInstallationTimeout))
 	return err
 }
 
@@ -64,7 +73,7 @@ func (m *defaultInstallationManager) computeDefaultHelmVals() map[string]interfa
 	vals["vpcId"] = m.vpcID
 	vals["serviceAccount"] = map[string]interface{}{
 		"create": false,
-		"name":   "aws-load-balancer-controller",
+		"name":   m.controllerSAName,
 	}
 	return vals
 }

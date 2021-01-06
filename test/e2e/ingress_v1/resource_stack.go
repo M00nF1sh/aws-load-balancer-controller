@@ -1,4 +1,4 @@
-package ingress
+package ingress_v1
 
 import (
 	"context"
@@ -61,9 +61,6 @@ func (s *resourceStack) Cleanup(ctx context.Context, f *framework.Framework) err
 		return err
 	}
 	if err := s.cleanupServices(ctx, f); err != nil {
-		return err
-	}
-	if err := s.cleanupDeployments(ctx, f); err != nil {
 		return err
 	}
 	return nil
@@ -133,41 +130,7 @@ func (s *resourceStack) waitDeploymentsBecomesReady(ctx context.Context, f *fram
 	return nil
 }
 
-func (s *resourceStack) cleanupDeployments(ctx context.Context, f *framework.Framework) error {
-	f.Logger.Info("cleanup all deployments")
-	var cleanupErrs []error
-	var cleanupErrsMutex sync.Mutex
-	var wg sync.WaitGroup
 
-	s.createdDPsMutex.Lock()
-	defer s.createdDPsMutex.Unlock()
-	for _, dp := range s.createdDPs {
-		wg.Add(1)
-		go func(dp *appsv1.Deployment) {
-			defer wg.Done()
-			f.Logger.Info("deleting deployment", "dp", k8s.NamespacedName(dp))
-			if err := f.K8sClient.Delete(ctx, dp); err != nil {
-				cleanupErrsMutex.Lock()
-				cleanupErrs = append(cleanupErrs, err)
-				cleanupErrsMutex.Unlock()
-				return
-			}
-			if err := f.DPManager.WaitUntilDeploymentDeleted(ctx, dp); err != nil {
-				cleanupErrsMutex.Lock()
-				cleanupErrs = append(cleanupErrs, err)
-				cleanupErrsMutex.Unlock()
-				return
-			}
-			f.Logger.Info("deleted deployment", "dp", k8s.NamespacedName(dp))
-		}(dp)
-	}
-
-	wg.Wait()
-	if len(cleanupErrs) != 0 {
-		return utils.NewMultiError(cleanupErrs...)
-	}
-	return nil
-}
 
 func (s *resourceStack) createServices(ctx context.Context, f *framework.Framework) error {
 	f.Logger.Info("create all services")
@@ -247,7 +210,7 @@ func (s *resourceStack) createIngresses(ctx context.Context, f *framework.Framew
 		wg.Add(1)
 		go func(ing *networking.Ingress) {
 			defer wg.Done()
-			f.Logger.Info("creating ingress", "ing", k8s.NamespacedName(ing))
+			f.Logger.Info("creating ingress_v1", "ing", k8s.NamespacedName(ing))
 			ing = ing.DeepCopy()
 			if err := f.K8sClient.Create(ctx, ing); err != nil {
 				createErrsMutex.Lock()
@@ -258,7 +221,7 @@ func (s *resourceStack) createIngresses(ctx context.Context, f *framework.Framew
 			s.createdINGsMutex.Lock()
 			s.createdINGs = append(s.createdINGs, ing)
 			s.createdINGsMutex.Unlock()
-			f.Logger.Info("created ingress", "ing", k8s.NamespacedName(ing))
+			f.Logger.Info("created ingress_v1", "ing", k8s.NamespacedName(ing))
 		}(ing)
 	}
 
@@ -281,7 +244,7 @@ func (s *resourceStack) waitIngressesBecomesReady(ctx context.Context, f *framew
 		wg.Add(1)
 		go func(i int, ing *networking.Ingress) {
 			defer wg.Done()
-			f.Logger.Info("waiting ingress becomes ready", "ing", k8s.NamespacedName(ing))
+			f.Logger.Info("waiting ingress_v1 becomes ready", "ing", k8s.NamespacedName(ing))
 			observedING, err := f.INGManager.WaitUntilIngressReady(ctx, ing)
 			if err != nil {
 				waitErrsMutex.Lock()
@@ -289,7 +252,7 @@ func (s *resourceStack) waitIngressesBecomesReady(ctx context.Context, f *framew
 				waitErrsMutex.Unlock()
 				return
 			}
-			f.Logger.Info("ingress becomes ready", "ing", k8s.NamespacedName(ing))
+			f.Logger.Info("ingress_v1 becomes ready", "ing", k8s.NamespacedName(ing))
 			s.createdINGs[i] = observedING
 		}(i, ing)
 	}
@@ -313,7 +276,7 @@ func (s *resourceStack) cleanupIngresses(ctx context.Context, f *framework.Frame
 		wg.Add(1)
 		go func(ing *networking.Ingress) {
 			defer wg.Done()
-			f.Logger.Info("deleting ingress", "ing", k8s.NamespacedName(ing))
+			f.Logger.Info("deleting ingress_v1", "ing", k8s.NamespacedName(ing))
 			if err := f.K8sClient.Delete(ctx, ing); err != nil {
 				cleanupErrsMutex.Lock()
 				cleanupErrs = append(cleanupErrs, err)
@@ -326,7 +289,7 @@ func (s *resourceStack) cleanupIngresses(ctx context.Context, f *framework.Frame
 				cleanupErrsMutex.Unlock()
 				return
 			}
-			f.Logger.Info("deleted ingress", "ing", k8s.NamespacedName(ing))
+			f.Logger.Info("deleted ingress_v1", "ing", k8s.NamespacedName(ing))
 		}(ing)
 	}
 

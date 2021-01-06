@@ -1,4 +1,4 @@
-package ingress
+package ingress_v1
 
 import networking "k8s.io/api/networking/v1beta1"
 
