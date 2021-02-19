@@ -18,6 +18,7 @@ import (
 	mock_networking "sigs.k8s.io/aws-load-balancer-controller/mocks/networking"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/annotations"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/deploy"
+	elbv2model "sigs.k8s.io/aws-load-balancer-controller/pkg/model/elbv2"
 	testclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
@@ -1421,6 +1422,87 @@ func Test_defaultModelBuilder_Build(t *testing.T) {
 				stackJSON, err := stackMarshaller.Marshal(gotStack)
 				assert.NoError(t, err)
 				assert.JSONEq(t, tt.wantStackJSON, stackJSON)
+			}
+		})
+	}
+}
+
+func Test_defaultModelBuildTask_buildSSLRedirectConfig(t *testing.T) {
+	type fields struct {
+		ingGroup                                  Group
+	}
+	type args struct {
+		listenPortConfigByPort map[int64]listenPortConfig
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *SSLRedirectConfig
+		wantErr error
+	}{
+		{
+			name: "single Ingress without SSLRedirectConfig",
+			fields: fields{
+				ingGroup: Group{
+					ID: GroupID{Namespace: "ns-1", Name: "ing-1"},
+					Members: []*networking.Ingress{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Namespace: "ns-1",
+								Name:      "ing-1",
+							},
+							Spec: networking.IngressSpec{
+								Rules: []networking.IngressRule{
+									{
+										Host: "app-1.example.com",
+										IngressRuleValue: networking.IngressRuleValue{
+											HTTP: &networking.HTTPIngressRuleValue{
+												Paths: []networking.HTTPIngressPath{
+													{
+														Path: "/svc-1",
+														Backend: networking.IngressBackend{
+															ServiceName: "svc-1",
+															ServicePort: intstr.FromString("http"),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				listenPortConfigByPort: map[int64]listenPortConfig{
+					80: {
+						protocol: elbv2model.ProtocolHTTP,
+					},
+					443: {
+						protocol: elbv2model.ProtocolHTTPS,
+					},
+				},
+			},
+			want: nil,
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			annotationParser := annotations.NewSuffixAnnotationParser("alb.ingress.kubernetes.io")
+			task := &defaultModelBuildTask{
+				annotationParser: annotationParser,
+				ingGroup:                                tt.fields.ingGroup,
+			}
+			got, err := task.buildSSLRedirectConfig(context.Background(), tt.args.listenPortConfigByPort)
+			if tt.wantErr != nil {
+				assert.EqualError(t, err, tt.wantErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}
