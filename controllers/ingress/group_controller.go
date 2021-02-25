@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	ingressTagPrefix        = "ingress.k8s.aws"
 	ingressAnnotationPrefix = "alb.ingress.kubernetes.io"
+	ingressTagPrefix        = "ingress.k8s.aws"
 	controllerName          = "ingress"
 )
 
@@ -51,8 +51,9 @@ func NewGroupReconciler(cloud aws.Cloud, k8sClient client.Client, eventRecorder 
 	stackMarshaller := deploy.NewDefaultStackMarshaller()
 	stackDeployer := deploy.NewDefaultStackDeployer(cloud, k8sClient, networkingSGManager, networkingSGReconciler,
 		config, ingressTagPrefix, logger)
-	ingressConfig := config.IngressConfig
-	groupLoader := ingress.NewDefaultGroupLoader(k8sClient, eventRecorder, annotationParser, ingressConfig.IngressClass)
+	classAnnotationMatcher := ingress.NewDefaultClassAnnotationMatcher(config.IngressConfig.IngressClass)
+	manageIngressesWithoutIngressClass := config.IngressConfig.IngressClass == ""
+	groupLoader := ingress.NewDefaultGroupLoader(k8sClient, eventRecorder, annotationParser, classAnnotationMatcher, manageIngressesWithoutIngressClass)
 	groupFinalizerManager := ingress.NewDefaultFinalizerManager(finalizerManager)
 
 	return &groupReconciler{

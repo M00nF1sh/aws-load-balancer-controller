@@ -1,13 +1,19 @@
 package ingress
 
-import (
-	"context"
-	networking "k8s.io/api/networking/v1beta1"
+const (
+	ingressClassALB = "alb"
 )
 
 // ClassAnnotationMatcher tests whether the kubernetes.io/ingress.class annotation on Ingresses matches the IngressClass of this controller.
 type ClassAnnotationMatcher interface {
-	Matches(ctx context.Context, ing *networking.Ingress) bool
+	Matches(ingClassAnnotation string) bool
+}
+
+// NewDefaultClassAnnotationMatcher constructs new defaultClassAnnotationMatcher.
+func NewDefaultClassAnnotationMatcher(ingressClass string) *defaultClassAnnotationMatcher {
+	return &defaultClassAnnotationMatcher{
+		ingressClass: ingressClass,
+	}
 }
 
 var _ ClassAnnotationMatcher = &defaultClassAnnotationMatcher{}
@@ -17,7 +23,7 @@ type defaultClassAnnotationMatcher struct {
 	ingressClass string
 }
 
-func (m *defaultClassAnnotationMatcher) Matches(ctx context.Context, ing *networking.Ingress) bool {
+func (m *defaultClassAnnotationMatcher) Matches(ingClassAnnotation string) bool {
 	if m.ingressClass == "" && ingClassAnnotation == ingressClassALB {
 		return true
 	}
