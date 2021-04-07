@@ -1,4 +1,4 @@
-package networking
+package networking_test
 
 import (
 	"context"
@@ -10,7 +10,9 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	mock_services "sigs.k8s.io/aws-load-balancer-controller/mocks/aws/services"
+	mock_networking "sigs.k8s.io/aws-load-balancer-controller/mocks/networking"
 	elbv2model "sigs.k8s.io/aws-load-balancer-controller/pkg/model/elbv2"
+	"sigs.k8s.io/aws-load-balancer-controller/pkg/networking"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
 )
@@ -27,7 +29,7 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 		describeSubnetsAsListCalls []describeSubnetsAsListCall
 	}
 	type args struct {
-		opts []SubnetsResolveOption
+		opts []networking.SubnetsResolveOption
 	}
 	tests := []struct {
 		name    string
@@ -71,9 +73,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -124,9 +126,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -166,9 +168,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("unable to discover at least one subnet"),
@@ -203,9 +205,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -246,9 +248,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("subnets count less than minimal required count: 1 < 2"),
@@ -298,9 +300,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -352,9 +354,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("subnets in multiple locales: [availabilityZone outpost]"),
@@ -383,9 +385,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("some error"),
@@ -431,9 +433,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -524,9 +526,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -588,9 +590,9 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				},
 			},
 			args: args{
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternetFacing),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -623,13 +625,7 @@ func Test_defaultSubnetsResolver_ResolveViaDiscovery(t *testing.T) {
 				ec2Client.EXPECT().DescribeSubnetsAsList(gomock.Any(), call.input).Return(call.output, call.err)
 			}
 
-			r := &defaultSubnetsResolver{
-				ec2Client:   ec2Client,
-				vpcID:       tt.fields.vpcID,
-				clusterName: tt.fields.clusterName,
-				logger:      &log.NullLogger{},
-			}
-
+			r := networking.NewDefaultSubnetsResolver(nil, ec2Client, tt.fields.vpcID, tt.fields.clusterName, &log.NullLogger{})
 			got, err := r.ResolveViaDiscovery(context.Background(), tt.args.opts...)
 			if tt.wantErr != nil {
 				assert.EqualError(t, err, tt.wantErr.Error())
@@ -657,7 +653,7 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 	}
 	type args struct {
 		subnetNameOrIDs []string
-		opts            []SubnetsResolveOption
+		opts            []networking.SubnetsResolveOption
 	}
 	tests := []struct {
 		name    string
@@ -693,9 +689,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1", "subnet-2"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -747,9 +743,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"my-name-1", "my-name-2"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -808,9 +804,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1", "my-name-2"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -862,9 +858,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"my-name-1", "my-name-2", "my-name-3"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("couldn't find all subnets, nameOrIDs: [my-name-1 my-name-2 my-name-3], found: 2"),
@@ -878,9 +874,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: nil,
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("unable to resolve at least one subnet"),
@@ -917,9 +913,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1", "subnet-2", "subnet-3"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("multiple subnets in same Availability Zone us-west-2a: [subnet-1 subnet-3]"),
@@ -952,9 +948,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1", "subnet-2"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("subnets in multiple locales: [availabilityZone outpost]"),
@@ -981,9 +977,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			wantErr: errors.New("subnets count less than minimal required count: 1 < 2"),
@@ -1011,9 +1007,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeApplication),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -1047,9 +1043,9 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 			},
 			args: args{
 				subnetNameOrIDs: []string{"subnet-1"},
-				opts: []SubnetsResolveOption{
-					WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
-					WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
+				opts: []networking.SubnetsResolveOption{
+					networking.WithSubnetsResolveLBType(elbv2model.LoadBalancerTypeNetwork),
+					networking.WithSubnetsResolveLBScheme(elbv2model.LoadBalancerSchemeInternal),
 				},
 			},
 			want: []*ec2sdk.Subnet{
@@ -1072,12 +1068,7 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 				ec2Client.EXPECT().DescribeSubnetsAsList(gomock.Any(), call.input).Return(call.output, call.err)
 			}
 
-			r := &defaultSubnetsResolver{
-				ec2Client:   ec2Client,
-				vpcID:       tt.fields.vpcID,
-				clusterName: tt.fields.clusterName,
-				logger:      &log.NullLogger{},
-			}
+			r := networking.NewDefaultSubnetsResolver(nil, ec2Client, tt.fields.vpcID, tt.fields.clusterName, &log.NullLogger{})
 			got, err := r.ResolveViaNameOrIDSlice(context.Background(), tt.args.subnetNameOrIDs, tt.args.opts...)
 			if tt.wantErr != nil {
 				assert.EqualError(t, err, tt.wantErr.Error())
@@ -1092,17 +1083,27 @@ func Test_defaultSubnetsResolver_ResolveViaNameOrIDSlice(t *testing.T) {
 	}
 }
 
-func Test_buildSDKSubnetLocaleType(t *testing.T) {
+func Test_defaultSubnetsResolver_buildSDKSubnetLocaleType(t *testing.T) {
+	type fetchAZInfosCall struct {
+		input  []string
+		output map[string]ec2sdk.AvailabilityZone
+		err    error
+	}
+	type fields struct {
+		fetchAZInfosCalls []fetchAZInfosCall
+	}
 	type args struct {
 		subnet *ec2sdk.Subnet
 	}
 	tests := []struct {
-		name string
-		args args
-		want subnetLocaleType
+		name    string
+		fields  fields
+		args    args
+		want    subnetLocaleType
+		wantErr error
 	}{
 		{
-			name: "availbilityZone subnet",
+			name: "availabilityZone subnet",
 			args: args{
 				subnet: &ec2sdk.Subnet{
 					SubnetId:         awssdk.String("subnet-1"),
@@ -1127,8 +1128,22 @@ func Test_buildSDKSubnetLocaleType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := buildSDKSubnetLocaleType(tt.args.subnet); got != tt.want {
-				t.Errorf("buildSDKSubnetLocaleType() = %v, want %v", got, tt.want)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			azInfoProvider := mock_networking.NewMockAZInfoProvider(ctrl)
+			for _, call := range tt.fields.fetchAZInfosCalls {
+				azInfoProvider.EXPECT().FetchAZInfos(gomock.Any(), call.input).Return(call.output, call.err)
+			}
+			r := defaultSubnetsResolver{
+				azInfoProvider: azInfoProvider,
+			}
+			got, err := r.buildSDKSubnetLocaleType(context.Background(), tt.args.subnet)
+			if tt.wantErr != nil {
+				assert.EqualError(t, err, tt.wantErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}
