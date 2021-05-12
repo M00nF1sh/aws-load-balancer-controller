@@ -1,0 +1,87 @@
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: IngressClass
+metadata:
+  name: echo-ingclass
+spec:
+  controller: ingress.k8s.aws/alb
+  parameters:
+    apiGroup: elbv2.k8s.aws
+    kind: IngressClassParams
+    name: echo-ingclass
+---
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: IngressClassParams
+metadata:
+  name: echo-ingclass
+spec:
+  namespaceSelector:
+    matchLabels:
+      domain: bugbash
+  group:
+    name: my-group
+  scheme: internet-facing
+  ipAddressType: ipv4
+  tags:
+  - key: domain
+    value: bugbash
+  - key: org
+    value: eks
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: echo-ingclass
+  labels:
+    domain: bugbash
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: echo-ingclass
+  name: echo
+spec:
+  selector:
+    matchLabels:
+      app: echo
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+        - name: echo
+          image: gcr.io/google_containers/echoserver:1.4
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: echo-ingclass
+  name: echo
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+  type: NodePort
+  selector:
+    app: echo
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: echo-ingclass
+  name: echo
+spec:
+  ingressClassName: echo-ingclass
+  rules:
+    - http:
+        paths:
+          - path: /
+            backend:
+              serviceName: echo
+              servicePort: 80
