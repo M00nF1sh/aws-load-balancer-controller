@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"strings"
 	"testing"
+
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -1271,6 +1272,9 @@ func Test_defaultModelBuildTask_buildLoadBalancerSubnets(t *testing.T) {
 				mockEC2,
 				"vpc-1",
 				"test-cluster",
+				true,
+				true,
+				true,
 				logr.New(&log.NullLogSink{}),
 			)
 
